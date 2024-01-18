@@ -1,0 +1,20 @@
+#pragma kernel CSMain
+
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+// #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
+
+Texture2D<float> _DepthTex;
+RWTexture2D<float> Result;
+float4 _CameraDepthTexture_TexelSize;
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    uint2 ori_id = id.xy * 2;
+    float4 value = float4(_DepthTex[ori_id], _DepthTex[ori_id + uint2(1,0)], _DepthTex[ori_id + uint2(1,1)], _DepthTex[ori_id + uint2(0,1)]);
+    #ifdef UNITY_REVERSED_Z
+        Result[id.xy] = min(min(min(value.x, value.y), value.z), value.w);
+    #else
+        Result[id.xy] = max(max(max(value.x, value.y), value.z), value.w);
+    #endif
+}
